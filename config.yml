@@ -1,0 +1,4 @@
+file:
+  path: /home/tatane/data/udemy/udemy_courses_augmented.csv
+  date_col_list:
+    - published_timestamp
