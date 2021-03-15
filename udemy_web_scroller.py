@@ -5,7 +5,7 @@ import re
 import numpy as np
 
 
-df = pd.read_csv("/home/tatane/data/udemy/udemy_courses_augmented.csv", parse_dates=["published_timestamp"])
+df = pd.read_csv("/data/udemy_courses_augmented.csv", parse_dates=["published_timestamp"])
 
 if "rating-number" not in df.columns:
     df["rating-number"] = np.nan
