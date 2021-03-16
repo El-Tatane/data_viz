@@ -62,12 +62,13 @@ class DataProcessing:
     def get_bar_time_df(self, time_type, analysis_target="num_subscribers", data_filter_dict=None):
         df_filtered = self.get_data_filtered(data_filter_dict)
         if time_type == "year":
-            return df_filtered[[analysis_target, time_type]].groupby(time_type).sum().reset_index()
-        return df_filtered[[analysis_target, time_type]].groupby(time_type).sum().reindex(ordered_month_list, axis=0)\
+            return df_filtered[[analysis_target, time_type]].groupby(time_type).mean().reset_index()
+        return df_filtered[[analysis_target, time_type]].groupby(time_type).mean().reindex(ordered_month_list, axis=0)\
             .reset_index()
 
     def get_parallel_coordinates_df(self, analysis_target, data_filter_dict):
-        cols = ["num_lectures", "content_duration", "price", analysis_target]
+        cols = list({"num_lectures", analysis_target, "total_earn", "rating-number", "num_subscribers",
+                     "content_duration", "price"})
         return self.get_data_filtered(data_filter_dict, cols=cols)
 
     def get_level_pie_chart_df(self, data_filter_dict):
@@ -92,16 +93,29 @@ class DataProcessing:
     def get_data_filtered(self, data_filter_dict, cols=None):
         cols = self.df.columns if cols is None else cols
         if data_filter_dict is None:
-            try:
-                return self.df[cols]
-            except:
-                print("gh", cols)
-                return self.df[cols]
-        real_data_filter_dict = {key: value for key, value in data_filter_dict.items() if key in self.df.columns}
+            return self.df[cols]
+
+        real_data_filter_dict = data_filter_dict
+        # real_data_filter_dict = {key: value for key, value in data_filter_dict.items() if key in self.df.columns}
         df_filter = self.df.copy()
         for key, value in real_data_filter_dict.items():
             if isinstance(value, list):
-                df_filter = df_filter.loc[df_filter[key].isin(value)]
-            else:
-                df_filter = df_filter.loc[df_filter[key] == value]
+                if key in df_filter.columns:
+                    df_filter = df_filter.loc[df_filter[key].isin(value)]
+            elif key in ["price_min",  "rating_min", "nb_sub_min", ]:
+                dict_ref = {"price_min": "price", "rating_min": "rating-number",
+                            "nb_sub_min": "num_subscribers"}
+                if dict_ref[key] in df_filter.columns:
+                    df_filter = df_filter.loc[df_filter[dict_ref[key]] >= value]
+            elif key in ["price_max","rating_max", "nb_sub_max"]:
+                dict_ref = {"price_max": "price", "rating_max": "rating-number",
+                            "nb_sub_max": "num_subscribers"}
+                if dict_ref[key] in df_filter.columns:
+                    df_filter = df_filter.loc[df_filter[dict_ref[key]] <= value]
         return df_filter[cols]
+
+    def get_resume_target(self, data_filter_dict, target_name, operator):
+        assert operator in {"min", "max", "mean"}
+        df_filter = self.get_data_filtered(data_filter_dict,
+                                           cols=[target_name])
+        return getattr(df_filter[target_name], operator)()
