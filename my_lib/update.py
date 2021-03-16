@@ -1,6 +1,6 @@
 import dash_html_components as html
 import dash_core_components as dcc
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from .start_app import app
 from .HTMLChart import HTMLChart
 from . import chart
@@ -73,3 +73,17 @@ def update_bubble_chart(analysis_target, filter_level, filter_subject, category=
 def update_level_pie_chart(filter_level, filter_subject):
     data_filter_dict = fill_data_filter_dict(filter_level=filter_level, filter_subject=filter_subject)
     return chart.get_level_pie_chart(data_filter_dict)
+
+
+
+
+# modal
+@app.callback(
+    Output("modal", "is_open"),
+    [Input("open", "n_clicks"), Input("close", "n_clicks")],
+    [State("modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
